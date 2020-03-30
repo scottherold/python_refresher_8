@@ -10,6 +10,7 @@ phone = input("Please enter the phone number ") # user input for SQL param
 # refactored with placeholders
 # update_sql = "UPDATE contacts SET email = '{}' WHERE contacts.phone = {}".format(new_email, phone)
 # refactored with shorthand placeholders instead of string formatting
+# In sqlite, this is ?
 update_sql = "UPDATE contacts SET email = ? WHERE phone = ?"
 print(update_sql)
 

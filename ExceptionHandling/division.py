@@ -10,11 +10,16 @@ def getint(prompt):
         try:
             number = int(input(prompt))
             return number
-        except ValueError:
-            print("Invalid number entered, please try again\n")
+        # order of exceptions matter. Code to exit should by higher in
+        # the try/catch block to prevent endless loops
         except EOFError:
             print("\n")
             sys.exit(1)
+        except ValueError:
+            print("Invalid number entered, please try again\n")
+        # finlly executes whether an exception was raised or not
+        finally:
+            print("The finally clause always executes.")
 
 
 def divide_nums():

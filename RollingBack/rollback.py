@@ -76,12 +76,18 @@ class Account(object):
     def _save_update(self, amount):
         new_balance = self._balance + amount
         trans_time = Account._current_time()
-        # update balance for account
-        db.execute("UPDATE accounts SET balance = ? WHERE (name = ?)", (new_balance, self.name))
-        # add new transaction
-        db.execute("INSERT INTO transactions VALUES(?, ?, ?)", (trans_time, self.name, amount))
-        db.commit()
-        self._balance = new_balance
+        # protects DB with try/catch block
+        try:
+            # update balance for account
+            db.execute("UPDATE accounts SET balance = ? WHERE (name = ?)", (new_balance, self.name))
+            # add new transaction
+            db.execute("INSERT INTO transactions VALUES(?, ?, ?)", (trans_time, self.name, amount))
+        except sqlite3.Error:
+            # prevents db update/insert on error
+            db.rollback()
+        else:
+            db.commit()
+            self._balance = new_balance
 
     # refactored to work with a DB
     def deposit(self, amount: int) -> float: 

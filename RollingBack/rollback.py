@@ -9,7 +9,7 @@ import pytz
 import datetime
 
 # DB Connection/Setup
-db = sqlite3.connect("accounts.sqlite")
+db = sqlite3.connect("accounts.sqlite", detect_types=sqlite3.PARSE_DECLTYPES)
 # PK is a composite key, instead of a ID column (for demonstrative
 # purposes)
 # this example of balance breaks with database normalization rules (no
@@ -22,6 +22,9 @@ db.execute("CREATE TABLE IF NOT EXISTS accounts (name TEXT PRIMARY KEY NOT NULL,
            " NOT NULL)")
 db.execute("CREATE TABLE IF NOT EXISTS transactions (time TIMESTAMP NOT NULL, account TEXT NOT"
            " NULL, amount INTEGER NOT NULL, PRIMARY KEY (time, account))")
+db.execute("CREATE VIEW IF NOT EXISTS localtransactions AS"
+           " SELECT strftime('%Y-%m-%d %H:%M:%f', transactions.time,'localtime') AS"
+           " localtime, transactions.amount FROM transactions ORDER BY transactions.time")
 
 
 class Account(object):

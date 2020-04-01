@@ -2,6 +2,27 @@
 # since working with floats results in rounding errors, you can utilize
 # working with decimals (see rollback2.py) or work with integers using
 # cents, which will not result in rounding errors (as does with floats)
+
+# Database connection added
+import sqlite3
+
+# DB Connection/Setup
+db = sqlite3.connect("accounts.sqlite")
+# PK is a composite key, instead of a ID column (for demonstrative
+# purposes)
+# this example of balance breaks with database normalization rules (no
+# duplication of data). Normalization would use math to compute all
+# depost/withdraw entries (you've done this before), but for performance
+# reasons, storing an actual DB entry for balance eventually makes more
+# sense, as computing massive amounts of deposit/withdraw amounts would
+# be very memory intensive eventually
+db.execute("CREATE TABLE IF NOT EXISTS accounts (name TEXT PRIMARY KEY NOT"
+    " NULL, balance INTEGER NOT NULL)")
+db.execute("CREATE TABLE IF NOT EXISTS transactions (time TIMESTAMP NOT NULL,"
+    " account TEXT NOT NULL, amount INTEGER NOT NULL, PRIMARY KEY (time,"
+    " account))")
+
+
 class Account(object):
     """ This class represents a bank account 
     
@@ -22,9 +43,24 @@ class Account(object):
     """
 
     def __init__(self, name: str, opening_balance: int = 0):
-        self.name = name
-        self._balance = opening_balance
-        print("Account created for {}".format(name), end='')
+        # open stream to DB
+        cursor = db.execute("SELECT name, balance FROM accounts WHERE (name ="
+            " ?)", (name,))
+        row = cursor.fetchone()
+
+        # check if row exists, if not create new account entry in DB
+        if row:
+            self.name, self._balance = row
+            print("Retrieved record for {}".format(self.name), end='')
+        else:
+            self.name = name
+            self._balance = opening_balance
+            # create new account using name provided, and default
+            # opening balance
+            cursor.execute("INSERT INTO  accounts VALUES(?, ?)", (name, 
+                opening_balance))
+            cursor.connection.commit() # saves the data
+            print("Account created for {}. ".format(name), end='')
         self.show_balance()
 
     # hint that method takes float type
@@ -63,3 +99,10 @@ if __name__ == '__main__':
     john.withdraw(30)
     john.withdraw(0)
     john.show_balance()
+
+    scott = Account("Scott")
+    bob = Account("Bob", 9000)
+    eric = Account("Eric", 7000)
+
+    # close DB stream
+    db.close()

@@ -39,7 +39,7 @@ def get_albums(event):
     """Uses the selection from the artistList widget to query DB artists table with the artist name
         provided by the selection to find the artist._id field. Uses the artist._id field to query
         the DB albums table to populate a list of albums with the artist._id. Pipes the list into
-        the albumLV widget"""
+        the albumsLV widget"""
 
     lb = event.widget
     index = lb.curselection()[0]
@@ -55,6 +55,27 @@ def get_albums(event):
                             " ORDER BY albums.name", artist_id):
         alist.append(row[0])
     albumnLV.set(tuple(alist))
+    songLV.set(("Choose an album",))
+
+
+def get_songs(event):
+    """Uses the selection from the albumList widget to query DB albums table with the album name
+        provided by the selection to find the album._id field. Uses the album._id field to query
+        the DB songs table to populate a list of songs with the album._id. Pipes the list into
+        the songsLV widget"""
+    lb = event.widget
+    index = int(lb.curselection()[0])
+    album_name = lb.get(index),
+
+    # get the album ID from the database row
+    album_id = conn.execute("SELECT albums._id FROM albums WHERE albums.name = ?",
+                            album_name).fetchone()
+    alist = []
+    for x in conn.execute("SELECT songs.title FROM songs WHERE songs.album = ?"
+                            " ORDER BY songs.track", album_id):
+        alist.append(x[0])
+    songLV.set(tuple(alist))
+
 
 
 # ===== UI Window =====
@@ -101,6 +122,9 @@ albumnLV.set(("Choose and artist",))
 albumList = Scrollbox(mainWindow, listvariable=albumnLV)
 albumList.grid(row=1, column=1, sticky='nsew', padx=(30, 0))
 albumList.config(border=2, relief='sunken')
+
+# = Album Select Binding =
+albumList.bind('<<ListboxSelect>>', get_songs)
 
 # == Songs Listbox ==
 # display for if no album selected

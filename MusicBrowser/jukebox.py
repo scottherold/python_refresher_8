@@ -7,6 +7,56 @@ except ImportError: # python 2
 # ===== DB connect =====
 conn = sqlite3.connect('music.sqlite')
 
+
+# ===== Scrollbar class for UI =====
+class Scrollbox(tkinter.Listbox):
+    """This class generates the scrollbar for the UI listboxes
+
+    Attributes:
+        scrollbar (tkinter.Scrollbar): The parameters for the scrollbar
+
+    Methods:
+        grid: overwrites the tkinter grid() method. Sets the parameters for the scrollbar using the
+            provided arguments
+    """
+    
+    def __init__(self, window, **kwargs):
+        # tkinter.Listbox.__init__self, window, **kwargs) # Python 2
+        super().__init__(window, **kwargs)
+
+        self.scrollbar = tkinter.Scrollbar(window, orient=tkinter.VERTICAL, command=self.yview)
+
+    def grid(self, row, column, sticky="nse", rowspan=1, columnspan=1, **kwargs):
+        # tkinter.Listbox.grid(self, row=row, column=column, sticky=sticky, rowspawn=rowspan,
+        # **kwargs) # Python 2
+        super().grid(row=row, column=column, sticky=sticky, rowspan=rowspan, columnspan=columnspan,
+                     **kwargs)
+        self.scrollbar.grid(row=row, column=column, sticky='nse', rowspan=rowspan)
+        self['yscrollcommand'] = self.scrollbar.set
+
+
+def get_albums(event):
+    """Uses the selection from the artistList widget to query DB artists table with the artist name
+        provided by the selection to find the artist._id field. Uses the artist._id field to query
+        the DB albums table to populate a list of albums with the artist._id. Pipes the list into
+        the albumLV widget"""
+
+    lb = event.widget
+    index = lb.curselection()[0]
+    # necessary comma due to tuple for single argument parameter
+    # substitution
+    artist_name = lb.get(index),
+
+    # get the artist ID from the database row
+    artist_id = conn.execute("SELECT artists._id FROM artists WHERE artists.name = ?",
+                             artist_name).fetchone()
+    alist = []
+    for row in conn.execute("SELECT albums.name FROM albums WHERE albums.artist = ?"
+                            " ORDER BY albums.name", artist_id):
+        alist.append(row[0])
+    albumnLV.set(tuple(alist))
+
+
 # ===== UI Window =====
 mainWindow = tkinter.Tk()
 mainWindow.title('Music DB Browser')
@@ -32,42 +82,34 @@ tkinter.Label(mainWindow, text="Albums").grid(row=0, column=1)
 tkinter.Label(mainWindow, text="Songs").grid(row=0, column=2)
 
 # == Artist Listbox ==
-artistList = tkinter.Listbox(mainWindow)
+artistList = Scrollbox(mainWindow)
 artistList.grid(row=1, column=0, sticky='nsew', rowspan=2, padx=(30, 0))
 artistList.config(border=2, relief='sunken')
 
-# = Artist Scrollbox =
-artistScroll = tkinter.Scrollbar(mainWindow, orient=tkinter.VERTICAL, command=artistList.yview)
-artistScroll.grid(row=1, column=0, sticky='nse', rowspan=2)
-artistList['yscrollcommand'] = artistScroll.set
+# = DB Query = 
+for artist in conn.execute("SELECT artists.name FROM artists ORDER BY artists.name"):
+    artistList.insert(tkinter.END, artist[0])
+
+# = Artist Select Binding =
+artistList.bind('<<ListboxSelect>>', get_albums)
 
 # == Albums Listbox ==
 # display for if no artist selected
 albumnLV = tkinter.Variable(mainWindow)
 albumnLV.set(("Choose and artist",))
 # display
-albumList = tkinter.Listbox(mainWindow, listvariable=albumnLV)
-albumList.grid(row=1, column=1, sticky='nesw', padx=(30, 0))
+albumList = Scrollbox(mainWindow, listvariable=albumnLV)
+albumList.grid(row=1, column=1, sticky='nsew', padx=(30, 0))
 albumList.config(border=2, relief='sunken')
-
-# = Albums Scrollbox =
-albumScroll = tkinter.Scrollbar(mainWindow, orient=tkinter.VERTICAL, command=albumList.yview)
-albumScroll.grid(row=1, column=1, sticky='nse', rowspan=2)
-albumList['yscrollcommand'] = albumScroll.set
 
 # == Songs Listbox ==
 # display for if no album selected
 songLV = tkinter.Variable(mainWindow)
 songLV.set(("Choose an album",))
 # display
-songList = tkinter.Listbox(mainWindow, listvariable=songLV)
-songList.grid(row=1, column=2, sticky='nesw', padx=(30, 0))
+songList = Scrollbox(mainWindow, listvariable=songLV)
+songList.grid(row=1, column=2, sticky='nsew', padx=(30, 0))
 songList.config(border=2, relief='sunken')
-
-# = Songs Scrollbox =
-songScroll = tkinter.Scrollbar(mainWindow, orient=tkinter.VERTICAL, command=songList.yview)
-songScroll.grid(row=1, column=2, sticky='nse', rowspan=2)
-songList['yscrollcommand'] = songScroll.set
 
 # === Main Loop ===
 mainWindow.mainloop()

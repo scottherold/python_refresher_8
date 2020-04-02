@@ -36,6 +36,11 @@ artistList = tkinter.Listbox(mainWindow)
 artistList.grid(row=1, column=0, sticky='nsew', rowspan=2, padx=(30, 0))
 artistList.config(border=2, relief='sunken')
 
+# = Artist Scrollbox =
+artistScroll = tkinter.Scrollbar(mainWindow, orient=tkinter.VERTICAL, command=artistList.yview)
+artistScroll.grid(row=1, column=0, sticky='nse', rowspan=2)
+artistList['yscrollcommand'] = artistScroll.set
+
 # == Albums Listbox ==
 # display for if no artist selected
 albumnLV = tkinter.Variable(mainWindow)
@@ -45,6 +50,11 @@ albumList = tkinter.Listbox(mainWindow, listvariable=albumnLV)
 albumList.grid(row=1, column=1, sticky='nesw', padx=(30, 0))
 albumList.config(border=2, relief='sunken')
 
+# = Albums Scrollbox =
+albumScroll = tkinter.Scrollbar(mainWindow, orient=tkinter.VERTICAL, command=albumList.yview)
+albumScroll.grid(row=1, column=1, sticky='nse', rowspan=2)
+albumList['yscrollcommand'] = albumScroll.set
+
 # == Songs Listbox ==
 # display for if no album selected
 songLV = tkinter.Variable(mainWindow)
@@ -53,6 +63,11 @@ songLV.set(("Choose an album",))
 songList = tkinter.Listbox(mainWindow, listvariable=songLV)
 songList.grid(row=1, column=2, sticky='nesw', padx=(30, 0))
 songList.config(border=2, relief='sunken')
+
+# = Songs Scrollbox =
+songScroll = tkinter.Scrollbar(mainWindow, orient=tkinter.VERTICAL, command=songList.yview)
+songScroll.grid(row=1, column=2, sticky='nse', rowspan=2)
+songList['yscrollcommand'] = songScroll.set
 
 # === Main Loop ===
 mainWindow.mainloop()
